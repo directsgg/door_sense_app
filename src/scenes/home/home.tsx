@@ -16,7 +16,7 @@ import {
   VideoCamOffIcon,
 } from '../../components/icons';
 import {NetworkInfo} from 'react-native-network-info';
-import ViewGradient from '../../components/viewgradient.component';
+//import ViewGradient from '../../components/viewgradient.component';
 const audioInputSampler = new AudioSampler();
 const audioOutput = new AudioOutput();
 const udpTransport = new UdpTransport();
@@ -199,38 +199,66 @@ const HomeScreen = () => {
 
   const onChangeVideoRecordingEsp32 = () => {
     if (uriWebView) {
+      const _recordinVideoEsp32 = !recordingVideoEsp32;
+
       //iniciar video
-      if (!recordingVideoEsp32) {
-        if (streamState) {
-          refWebView.current.reload();
-        } else {
-          setStreamState('stream');
-        }
-      }
-      // detener video
-      else {
+      if (_recordinVideoEsp32) {
+        fetch(`http://${uriWebView}:80/ctrl`, requestOptions('c'))
+          .then(() => {
+            setTimeout(() => {
+              if (streamState) {
+                refWebView.current.reload();
+              } else {
+                setStreamState('stream');
+              }
+
+              setRecordingVideoEsp32(!recordingVideoEsp32);
+            }, 2000);
+          })
+          .catch(() => {
+            //console.error(e);
+            showToastShort('Error al establecer conexion');
+            setUriWebView('');
+            searchIpEsp32();
+          });
+      } else {
+        // detener video
         refWebView.current.stopLoading();
+        setRecordingVideoEsp32(_recordinVideoEsp32);
       }
-      setRecordingVideoEsp32(!recordingVideoEsp32);
     } else {
       showToastShort('No hay conexion, reintentado...');
       setUriWebView('');
       searchIpEsp32();
       setTimeout(() => {
         if (uriWebView) {
+          const _recordinVideoEsp32 = !recordingVideoEsp32;
+
           //iniciar video
-          if (!recordingVideoEsp32) {
-            if (streamState) {
-              refWebView.current.reload();
-            } else {
-              setStreamState('stream');
-            }
-          }
-          // detener video
-          else {
+          if (_recordinVideoEsp32) {
+            fetch(`http://${uriWebView}:80/ctrl`, requestOptions('c'))
+              .then(() => {
+                setTimeout(() => {
+                  if (streamState) {
+                    refWebView.current.reload();
+                  } else {
+                    setStreamState('stream');
+                  }
+
+                  setRecordingVideoEsp32(!recordingVideoEsp32);
+                }, 2000);
+              })
+              .catch(() => {
+                //console.error(e);
+                showToastShort('Error al establecer conexion');
+                setUriWebView('');
+                searchIpEsp32();
+              });
+          } else {
+            // detener video
             refWebView.current.stopLoading();
+            setRecordingVideoEsp32(_recordinVideoEsp32);
           }
-          setRecordingVideoEsp32(!recordingVideoEsp32);
         }
       }, 2000);
     }
@@ -282,70 +310,68 @@ const HomeScreen = () => {
                   </div>
                 </body>`;
   return (
-    <View useSafeArea flex>
-      <ViewGradient>
-        <View style={styles.containerConnectionStatus}>
-          <ConnectionStatusBar
-            label="Sin conexión, conéctese a wifi"
-            onConnectionChange={connectionChange}
-          />
-        </View>
-        <View
-          style={styles.containerWebView}
-          flex
-          br40
-          padding-16
-          margin-16
-          marginV-20
-          backgroundColor="#02132F">
-          <WebView
-            ref={refWebView}
-            style={styles.webView}
-            source={{
-              html: htmlWebView,
-            }}
-            startInLoadingState
-            renderLoading={() => (
-              <View useSafeArea>
-                <ActivityIndicator size="large" color="lightskyblue" />
-              </View>
-            )}
-          />
-        </View>
-        <View absF flex bottom>
-          <View row centerH>
-            <View>
-              <Button
-                iconSource={IconVolumeState}
-                onPress={() => onChangeAudioRecordingEsp32()}
-                round
-                backgroundColor={Colors.grey30}
-                disabled={recordingTelefono || ipAddressLocal === ''}
-              />
+    <View useSafeArea flex backgroundColor={Colors.$backgroundPrimaryHeavy}>
+      <View style={styles.containerConnectionStatus}>
+        <ConnectionStatusBar
+          label="Sin conexión, conéctese a wifi"
+          onConnectionChange={connectionChange}
+        />
+      </View>
+      <View
+        style={styles.containerWebView}
+        flex
+        br40
+        padding-16
+        margin-16
+        marginV-20
+        backgroundColor="#02132F">
+        <WebView
+          ref={refWebView}
+          style={styles.webView}
+          source={{
+            html: htmlWebView,
+          }}
+          startInLoadingState
+          renderLoading={() => (
+            <View useSafeArea>
+              <ActivityIndicator size="large" color="lightskyblue" />
             </View>
-            <View marginH-16>
-              <Button
-                iconSource={IconTelefonoRecording}
-                onPressIn={startRecordingTelefono}
-                onPressOut={endRecordingTelefono}
-                size="large"
-                round
-                disabled={ipAddressLocal === ''}
-              />
-            </View>
-            <View>
-              <Button
-                iconSource={IconVideoCameraState}
-                onPress={onChangeVideoRecordingEsp32}
-                size="large"
-                round
-                backgroundColor={Colors.grey30}
-                disabled={recordingTelefono || ipAddressLocal === ''}
-              />
-            </View>
+          )}
+        />
+      </View>
+      <View absF flex bottom>
+        <View row centerH>
+          <View>
+            <Button
+              iconSource={IconVolumeState}
+              onPress={() => onChangeAudioRecordingEsp32()}
+              round
+              backgroundColor={Colors.grey30}
+              disabled={recordingTelefono || ipAddressLocal === ''}
+            />
+          </View>
+          <View marginH-16>
+            <Button
+              iconSource={IconTelefonoRecording}
+              onPressIn={startRecordingTelefono}
+              onPressOut={endRecordingTelefono}
+              size="large"
+              round
+              disabled={ipAddressLocal === ''}
+            />
+          </View>
+          <View>
+            <Button
+              iconSource={IconVideoCameraState}
+              onPress={onChangeVideoRecordingEsp32}
+              size="large"
+              round
+              backgroundColor={Colors.grey30}
+              disabled={recordingTelefono || ipAddressLocal === ''}
+            />
           </View>
         </View>
-      </ViewGradient>
+      </View>
     </View>
   );
 };
